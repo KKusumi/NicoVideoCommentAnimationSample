@@ -4,7 +4,6 @@ import android.animation.ObjectAnimator
 import android.graphics.Color
 import android.os.Bundle
 import android.util.DisplayMetrics
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup.LayoutParams
 import android.view.animation.LinearInterpolator
@@ -13,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.animation.doOnEnd
+import androidx.core.view.doOnLayout
 import androidx.databinding.DataBindingUtil
 import com.example.nicovideocommentanimationsample.databinding.ActivityMainBinding
 import java.util.*
@@ -24,7 +24,6 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         _binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
-        Log.d("MainActivity", "width: ${getWindowSize().width}, height: ${getWindowSize().height}")
         _binding.apply {
             setOnClickButton {
                 startAnimation(this.container)
@@ -63,21 +62,24 @@ class MainActivity : AppCompatActivity() {
         }
 
         // 右から左に移動
-        val objectAnimator = ObjectAnimator.ofFloat(
-                textView,
-                "translationX",
-                0f,
-                -(windowSize.width + textView.layoutParams.width).toFloat()
-        ).apply {
-            interpolator = LinearInterpolator()
-            duration = 3000L
-        }.also {
-            it.doOnEnd {
-                // アニメーションが終わったViewを削除
-                constraintLayout.removeView(textView)
+        textView.doOnLayout {
+            val textViewWidth = it.width.toFloat()
+            val objectAnimator = ObjectAnimator.ofFloat(
+                    textView,
+                    "translationX",
+                    0f,
+                    -(windowSize.width + textViewWidth)
+            ).apply {
+                interpolator = LinearInterpolator()
+                duration = 3000L
+            }.also {
+                it.doOnEnd {
+                    // アニメーションが終わったViewを削除
+                    constraintLayout.removeView(textView)
+                }
             }
+            objectAnimator.start()
         }
-        objectAnimator.start()
     }
 
     private fun getWindowSize(): WindowSize {
